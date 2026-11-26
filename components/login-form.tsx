@@ -2,6 +2,7 @@
 
 import { useRouter } from "next/navigation"
 import { useState, type FormEvent } from "react"
+import { ChevronDown, X } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { useAuth } from "@/context/AuthContext"
 import { useToast } from "@/components/toast-provider"
@@ -15,9 +16,14 @@ export function LoginForm() {
   const router = useRouter()
   const [mode, setMode] = useState<"signin" | "signup">("signin")
   const [busy, setBusy] = useState(false)
-  const [form, setForm] = useState({ name: "", phone: "", email: "", password: "" })
+  const [form, setForm] = useState({ name: "", phone: "", email: "", password: "", role: "student" as "student" | "owner" })
   const set = (k: keyof typeof form) => (e: { target: { value: string } }) =>
     setForm((f) => ({ ...f, [k]: e.target.value }))
+
+  function close() {
+    if (window.history.length > 1) router.back()
+    else router.push("/")
+  }
 
   async function submit(e: FormEvent) {
     e.preventDefault()
@@ -46,17 +52,46 @@ export function LoginForm() {
 
   return (
     <div className="container-page flex justify-center py-12">
-      <form onSubmit={submit} className="card-surface w-full max-w-sm space-y-4 p-6">
-        <h1 className="text-2xl font-extrabold">{mode === "signin" ? "Sign in" : "Create account"}</h1>
+      <form onSubmit={submit} className="card-surface relative w-full max-w-sm space-y-4 p-6">
+        <button
+          type="button"
+          onClick={close}
+          aria-label="Close"
+          className="absolute right-4 top-4 cursor-pointer rounded-md p-1 text-muted-foreground hover:bg-muted hover:text-foreground"
+        >
+          <X className="size-4" />
+        </button>
+        <h1 className="pr-8 text-2xl font-extrabold">{mode === "signin" ? "Sign in" : "Create an account"}</h1>
         {mode === "signup" && (
           <>
             <label className="block text-sm font-semibold">
-              Full name
+              Name
               <input required value={form.name} onChange={set("name")} className={input} />
             </label>
             <label className="block text-sm font-semibold">
-              WhatsApp number (with country code)
-              <input required inputMode="tel" placeholder="919876543210" value={form.phone} onChange={set("phone")} className={input} />
+              Phone
+              <input
+                required
+                inputMode="tel"
+                placeholder="With country code, e.g. 919876543210"
+                value={form.phone}
+                onChange={set("phone")}
+                className={input}
+              />
+            </label>
+            <label className="block text-sm font-semibold">
+              I am a
+              <div className="relative">
+                <select
+                  value={form.role}
+                  onChange={set("role")}
+                  className={`${input} cursor-pointer appearance-none pr-9`}
+                >
+                  <option value="student">Student</option>
+                  <option value="owner">Owner (PG, tiffin or books)</option>
+                </select>
+                <ChevronDown className="pointer-events-none absolute right-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
+              </div>
             </label>
           </>
         )}
@@ -83,7 +118,7 @@ export function LoginForm() {
           {mode === "signin" ? "New here?" : "Already have an account?"}{" "}
           <button
             type="button"
-            className="cursor-pointer font-semibold text-primary"
+            className="cursor-pointer font-semibold text-primary underline underline-offset-4"
             onClick={() => setMode(mode === "signin" ? "signup" : "signin")}
           >
             {mode === "signin" ? "Create an account" : "Sign in"}
